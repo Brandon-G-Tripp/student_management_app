@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/Brandon-G-Tripp/student_management_app/internal/model"
 )
