@@ -5,10 +5,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/Brandon-G-Tripp/student_management_app/internal/model"
 	"github.com/Brandon-G-Tripp/student_management_app/internal/repository"
 )
+
+type CreateStudentRequest struct {
+	Name string `json:"name"`
+	Grade string `json:"grade"`
+}
 
 type Handler struct {
 	repo *repository.Repository
@@ -39,11 +45,23 @@ func (h *Handler) GetStudents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateStudent(w http.ResponseWriter, r *http.Request) {
-	var studentToCreate model.Student
+	var createStudentReq CreateStudentRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&studentToCreate); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&createStudentReq); err != nil {
+		log.Printf("Error from student creation: %v", err)
 		http.Error(w, "Invalid body in the request", http.StatusBadRequest)
 		return
+	}
+
+	grade, err := strconv.Atoi(createStudentReq.Grade)
+	if err != nil {
+		http.Error(w, "Invalid grade format needs to be a number", http.StatusBadRequest)
+		return
+	}
+
+	studentToCreate := model.Student{
+		Name: createStudentReq.Name,
+		Grade: int64(grade),
 	}
 
 	createdStudent, err := h.repo.CreateStudent(r.Context(), studentToCreate)
