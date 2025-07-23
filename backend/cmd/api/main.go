@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,6 +37,13 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Reference for builtin pattern matching for the Mux - https://pkg.go.dev/net/http@go1.24.5#ServeMux
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode("HELLO"); err != nil {
+			http.Error(w, "An internal server error occurred", http.StatusInternalServerError)
+		}
+	})
 	mux.HandleFunc("GET /students", studentHandler.GetStudents)
 	mux.HandleFunc("POST /students", studentHandler.CreateStudent)
 
