@@ -11,7 +11,7 @@ services:
       PGDATA: /var/lib/postgresql/data
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init_postgres.sql.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init_postgres.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       # My system does not like the standard port on the host system
       - "5433:5432"
@@ -45,8 +45,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      weaviate:
-        condition: service_started
     restart: unless-stopped
 
 volumes:
