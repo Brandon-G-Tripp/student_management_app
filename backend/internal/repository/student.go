@@ -7,6 +7,11 @@ import (
 	"github.com/Brandon-G-Tripp/student_management_app/internal/model"
 )
 
+type StudentRepository interface {
+	GetStudents(ctx context.Context) ([]model.Student, error)
+	CreateStudent(ctx context.Context, student model.Student) (model.Student, error)
+}
+
 type Repository struct {
 	db *sql.DB
 }

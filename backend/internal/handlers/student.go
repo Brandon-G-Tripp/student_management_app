@@ -17,10 +17,10 @@ type CreateStudentRequest struct {
 }
 
 type Handler struct {
-	repo *repository.Repository
+	repo repository.StudentRepository // this is the interface to allow injection of mock for testing
 }
 
-func New(repo *repository.Repository) *Handler {
+func New(repo repository.StudentRepository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
