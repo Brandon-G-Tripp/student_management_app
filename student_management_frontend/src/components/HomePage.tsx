@@ -23,14 +23,16 @@ const HomePage = () => {
 
   const handleCreateStudent = async (data: Partial<Student>) => {
     try {
-      const newStudent = await apiClient.post<Student>('/students', data);
+      const resp = await apiClient.post<Student>('/students', data)
 
-      setStudents(currentStudents => [...currentStudents, newStudent]);
+      const newStudent = resp.data
+
+      setStudents(currentStudents => [...currentStudents, newStudent])
 
       // setActiveTab('list');
 
     } catch (error) {
-      console.error("Failed to create student:", error);
+      console.error("Failed to create student:", error)
     }
   };
 
