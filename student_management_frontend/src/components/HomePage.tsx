@@ -3,14 +3,18 @@ import StudentList from '../features/students/StudentList'
 import ActionForm from '../features/students/ActionForm'
 import apiClient from '../api/apiClient'
 import type { Student } from '../types'
+import { useWebSocket } from '../hooks/useWebSocket'
 
 // can add other navbar items later
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState('list')
   const [selectedAction, setSelectedAction] = useState('create')
+  const [students, setStudents] = useState<Student[]>([])
 
-  const [students, setStudents] = useState<Student[]>([]);
+  const { isConnected, lastMessage, connect, disconnect } = useWebSocket('ws://localhost:8080/ws')
+  const [toastMessage, setToastMessage] = useState('')
 
+  // handle loading of the students for the list view
   useEffect(() => {
     apiClient.get<Student[]>('/students')
       .then(resp => {
@@ -21,15 +25,36 @@ const HomePage = () => {
       })
   }, [])
 
+  // listening for updates from websocket
+  useEffect(() => {
+    if (lastMessage) {
+      const newStudent: Student = JSON.parse(lastMessage)
+
+      setStudents(currentStudents => {
+        // check this first to prevent adding a duplicate to UI when the student is added in the same window
+        const studentPresentInList = currentStudents.some(student => student.id === newStudent.id)
+
+        if (studentPresentInList) {
+          return currentStudents
+        } else {
+          return [...currentStudents, newStudent]
+        }
+      })
+
+      setToastMessage(`New Student Added: ${newStudent.name}`)
+      const timer = setTimeout(() => setToastMessage(''), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [lastMessage])
+
   const handleCreateStudent = async (data: Partial<Student>) => {
     try {
       const resp = await apiClient.post<Student>('/students', data)
-
       const newStudent = resp.data
 
       setStudents(currentStudents => [...currentStudents, newStudent])
 
-      // setActiveTab('list');
+      setActiveTab('list')
 
     } catch (error) {
       console.error("Failed to create student:", error)
@@ -57,6 +82,14 @@ const HomePage = () => {
         >
           Actions
         </a>
+        <a
+          role='tab'
+          className={`tab ${activeTab === 'realtime' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('realtime')}
+        >
+          Real Time Notifications
+        </a>
+        <a role='tab' className='tab [--tab-bg:transparent]'></a>
         <a role='tab' className='tab [--tab-bg:transparent]'></a>
       </div>
 
@@ -95,16 +128,30 @@ const HomePage = () => {
                   </div>
               )}
 
-              {selectedAction === 'delete' && (
-                  <div className="p-4 bg-base-100 rounded-lg">
-                      <p>UI for selecting a student to **delete** will go here.</p>
-                  </div>
-              )}
-
             */}
           </div>
         )}
+
+        {activeTab === 'realtime' && (
+          <div>
+            <h3 className="text-lg font-bold">Live Updates</h3>
+            <p className="py-2">Subscribe to receive live updates when new students are added.</p>
+            <button className="btn btn-accent" onClick={isConnected ? disconnect : connect}>
+              {isConnected ? 'Unsubscribe' : 'Subscribe'}
+            </button>
+            {isConnected && <p className="text-success mt-2">Connected to real-time feed.</p>}
+          </div>
+        )}
+
+       {toastMessage && (
+          <div className="toast toast-top toast-end">
+            <div className="alert alert-info">
+              <span>{toastMessage}</span>
+            </div>
+          </div>
+       )}
       </div>
+
     </div>
   )
 }
