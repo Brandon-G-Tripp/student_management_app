@@ -47,6 +47,7 @@ func main() {
 	})
 	mux.HandleFunc("GET /students", studentHandler.GetStudents)
 	mux.HandleFunc("POST /students", studentHandler.CreateStudent)
+	// can add a path like this for update without router - "PUT /students/{id}"
 
 	// can add put delete etc later
 	c := cors.New(cors.Options{

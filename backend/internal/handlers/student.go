@@ -72,3 +72,4 @@ func (h *Handler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createdStudent)
 }
 
+// for update we can grab the id off the path with  r.PathValue("id")
