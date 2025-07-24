@@ -11,6 +11,7 @@ import (
 	"github.com/Brandon-G-Tripp/student_management_app/internal/handlers"
 	"github.com/Brandon-G-Tripp/student_management_app/internal/repository"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/rs/cors"
 )
 
 // can add maybe gin in order to get URL params easier
@@ -46,9 +47,19 @@ func main() {
 	})
 	mux.HandleFunc("GET /students", studentHandler.GetStudents)
 	mux.HandleFunc("POST /students", studentHandler.CreateStudent)
+	// can add a path like this for update without router - "PUT /students/{id}"
+
+	// can add put delete etc later
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowedMethods: []string{"GET", "POST"},
+		AllowedHeaders: []string{"Content-Type"},
+	})
+
+	handler := c.Handler(mux)
 
 	log.Println("Starting server on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8080", handler); err != nil {
 		log.Fatal(err)
 	}
 

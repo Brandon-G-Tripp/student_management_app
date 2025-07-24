@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/Brandon-G-Tripp/student_management_app/internal/model"
 	"github.com/Brandon-G-Tripp/student_management_app/internal/repository"
@@ -13,7 +12,7 @@ import (
 
 type CreateStudentRequest struct {
 	Name string `json:"name"`
-	Grade string `json:"grade"`
+	Grade int64 `json:"grade"`
 }
 
 type Handler struct {
@@ -53,15 +52,9 @@ func (h *Handler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	grade, err := strconv.Atoi(createStudentReq.Grade)
-	if err != nil {
-		http.Error(w, "Invalid grade format needs to be a number", http.StatusBadRequest)
-		return
-	}
-
 	studentToCreate := model.Student{
 		Name: createStudentReq.Name,
-		Grade: int64(grade),
+		Grade: createStudentReq.Grade,
 	}
 
 	createdStudent, err := h.repo.CreateStudent(r.Context(), studentToCreate)
@@ -79,3 +72,4 @@ func (h *Handler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createdStudent)
 }
 
+// for update we can grab the id off the path with  r.PathValue("id")
