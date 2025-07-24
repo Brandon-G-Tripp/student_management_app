@@ -10,6 +10,7 @@ import (
 
 	"github.com/Brandon-G-Tripp/student_management_app/internal/handlers"
 	"github.com/Brandon-G-Tripp/student_management_app/internal/repository"
+	"github.com/Brandon-G-Tripp/student_management_app/internal/websocket"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/cors"
 )
@@ -31,9 +32,14 @@ func main() {
 		log.Printf("ERROR: failed to connect to DB with error: %v", err)
 	}
 
+
+	// websocket addition here
+	wsHub := websocket.NewHub()
+	go wsHub.Run()
+
 	studentRepo := repository.New(db)
 
-	studentHandler := handlers.New(studentRepo)
+	studentHandler := handlers.New(studentRepo, wsHub)
 
 	mux := http.NewServeMux()
 
@@ -47,13 +53,14 @@ func main() {
 	})
 	mux.HandleFunc("GET /students", studentHandler.GetStudents)
 	mux.HandleFunc("POST /students", studentHandler.CreateStudent)
+	mux.HandleFunc("/ws", wsHub.ServeWs)
 	// can add a path like this for update without router - "PUT /students/{id}"
 
 	// can add put delete etc later
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},
-		AllowedMethods: []string{"GET", "POST"},
-		AllowedHeaders: []string{"Content-Type"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"*"},
 	})
 
 	handler := c.Handler(mux)
