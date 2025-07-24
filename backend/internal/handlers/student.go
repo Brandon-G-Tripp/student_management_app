@@ -8,6 +8,7 @@ import (
 
 	"github.com/Brandon-G-Tripp/student_management_app/internal/model"
 	"github.com/Brandon-G-Tripp/student_management_app/internal/repository"
+	"github.com/Brandon-G-Tripp/student_management_app/internal/websocket"
 )
 
 type CreateStudentRequest struct {
@@ -17,11 +18,13 @@ type CreateStudentRequest struct {
 
 type Handler struct {
 	repo repository.StudentRepository // this is the interface to allow injection of mock for testing
+	wsHub *websocket.Hub
 }
 
-func New(repo repository.StudentRepository) *Handler {
+func New(repo repository.StudentRepository, wsHub *websocket.Hub) *Handler {
 	return &Handler{
 		repo: repo,
+		wsHub: wsHub,
 	}
 }
 
@@ -63,12 +66,11 @@ func (h *Handler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.wsHub.Broadcast <- createdStudent
+
 	w.Header().Set("Location", fmt.Sprintf("/students/%d", createdStudent.ID))
-
 	w.Header().Set("Content-Type", "application/json")
-
 	w.WriteHeader(http.StatusCreated)
-
 	json.NewEncoder(w).Encode(createdStudent)
 }
 
